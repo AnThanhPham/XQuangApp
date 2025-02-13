@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Card, Upload, Button, Tabs, Space, Row, Col, Typography, Layout, message } from 'antd';
+import { Card, Upload, Button, Tabs, Typography, message } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 
 const { Title } = Typography;
-const { Header, Content } = Layout;
 
 interface ProcessedImage {
   original: string | null;
@@ -47,7 +46,7 @@ const XRayProcessor: React.FC = () => {
         return;
       }
 
-      const response = await fetch('your-api-endpoint', { // Replace with your API endpoint
+      const response = await fetch('your-api-endpoint', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,106 +81,140 @@ const XRayProcessor: React.FC = () => {
     }
   };
 
-  const ImageDisplay: React.FC<{ imageUrl: string | null; title: string }> = ({ imageUrl, title }) => (
-    <Card
-      title={title}
-      style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            style={{
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: 'contain'
-            }}
-          />
-        ) : (
-          <div style={{ textAlign: 'center' }}>
-            <Typography.Text type="secondary">
-              {title === 'Original Image' ? 'No image uploaded' : 'No processed image yet'}
-            </Typography.Text>
-          </div>
-        )}
-      </div>
-    </Card>
-  );
-
   return (
-    <Layout style={{ minHeight: '100vh', background: '#fff' }}>
-      <Header style={{
-        background: '#fff',
+    <div style={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100vh',
+      width: '100vw',
+      alignItems: 'center',
+      background: '#fff'
+    }}>
+      {/* Header */}
+      <div style={{
+        width: '100%',
         borderBottom: '1px solid #f0f0f0',
-        padding: '0 24px',
+        background: '#fff',
+        padding: '16px 0',
+        position: 'fixed',
+        top: 0,
+        zIndex: 1000,
         display: 'flex',
-        alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <Title level={3} style={{ margin: 0 }}>X-Ray Image Processor</Title>
-      </Header>
+        <div style={{ width: '100%', maxWidth: '1200px', textAlign: 'center' }}>
+          <Title level={3} style={{ margin: 0 }}>X-Ray Image Processor</Title>
+        </div>
+      </div>
 
-      <Content style={{ 
-        padding: '24px', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
+      {/* Main Content Container */}
+      <div style={{
+        width: '100%',
+        maxWidth: '1200px',
+        marginTop: '80px',
+        padding: '0 20px',
+        display: 'flex',
         flexDirection: 'column',
-        flex: 1 // Content chiếm toàn bộ không gian
+        alignItems: 'center',
+        gap: '24px'
       }}>
-        <div style={{ width: '100%' }}> {/* Chiếm toàn bộ chiều rộng để căn giữa */}
+        {/* Tabs */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <Tabs
             activeKey={selectedModel}
             items={models}
             onChange={setSelectedModel}
-            style={{ marginBottom: 24 }}
+            style={{ width: '100%', maxWidth: '600px' }}
+            centered
           />
-
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <Upload
-              beforeUpload={handleImageUpload}
-              accept="image/*"
-              showUploadList={false}
-            >
-              <Button icon={<UploadOutlined />} size="large">Upload X-Ray Image</Button>
-            </Upload>
-
-            <Row gutter={[24, 24]} style={{ marginTop: 20 }}>
-              <Col xs={24} md={12}>
-                <ImageDisplay
-                  imageUrl={images.original}
-                  title="Original Image"
-                />
-              </Col>
-              <Col xs={24} md={12}>
-                <ImageDisplay
-                  imageUrl={images.processed}
-                  title="Processed Image"
-                />
-              </Col>
-            </Row>
-
-            <div style={{ textAlign: 'center', marginTop: 20 }}>
-              <Button
-                type="primary"
-                size="large"
-                onClick={processImage}
-                disabled={!images.original || isLoading}
-                loading={isLoading}
-              >
-                Process Image
-              </Button>
-            </div>
-          </Space>
         </div>
-      </Content>
-    </Layout>
+
+        {/* Upload Button */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <Upload
+            beforeUpload={handleImageUpload}
+            accept="image/*"
+            showUploadList={false}
+          >
+            <Button icon={<UploadOutlined />} size="large">Upload X-Ray Image</Button>
+          </Upload>
+        </div>
+
+        {/* Image Cards */}
+        <div style={{ 
+          width: '100%',
+          maxWidth: '1000px',
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '24px',
+          flexWrap: 'wrap',
+          justifyContent: 'center'
+        }}>
+          <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: 'calc(50% - 12px)' }}>
+            <Card title="Original Image" style={{ width: '100%' }}>
+              <div style={{ 
+                height: '400px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                {images.original ? (
+                  <img
+                    src={images.original}
+                    alt="Original"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain'
+                    }}
+                  />
+                ) : (
+                  <Typography.Text type="secondary">No image uploaded</Typography.Text>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: 'calc(50% - 12px)' }}>
+            <Card title="Processed Image" style={{ width: '100%' }}>
+              <div style={{ 
+                height: '400px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}>
+                {images.processed ? (
+                  <img
+                    src={images.processed}
+                    alt="Processed"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain'
+                    }}
+                  />
+                ) : (
+                  <Typography.Text type="secondary">No processed image yet</Typography.Text>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Process Button */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+          <Button
+            type="primary"
+            size="large"
+            onClick={processImage}
+            disabled={!images.original || isLoading}
+            loading={isLoading}
+          >
+            Process Image
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
