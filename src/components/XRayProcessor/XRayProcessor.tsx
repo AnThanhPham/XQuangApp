@@ -82,41 +82,35 @@ const XRayProcessor: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex',
-      flexDirection: 'column',
-      minHeight: '100vh',
-      width: '100vw',
-      alignItems: 'center',
-      background: '#fff'
-    }}>
+    <>
       {/* Header */}
       <div style={{
-        width: '100%',
-        borderBottom: '1px solid #f0f0f0',
         background: '#fff',
-        padding: '16px 0',
         position: 'fixed',
+        left: 0,
+        right: 0,
         top: 0,
-        zIndex: 1000,
-        display: 'flex',
-        justifyContent: 'center'
+        zIndex: 99,
+        padding: '16px 0',
+        borderBottom: '1px solid #f0f0f0'
+        // width: '100%',
+        // borderBottom: '1px solid #f0f0f0',
+        // background: '#fff',
+        // padding: '16px 0',
+        // // position: 'fixed',
+        // top: 0,
+        // zIndex: 1000,
+        // display: 'flex',
+        // justifyContent: 'center'
       }}>
-        <div style={{ width: '100%', maxWidth: '1200px', textAlign: 'center' }}>
+        <div style={{ width: '100%', textAlign: 'center' }}>
           <Title level={3} style={{ margin: 0 }}>X-Ray Image Processor</Title>
         </div>
       </div>
 
       {/* Main Content Container */}
       <div style={{
-        width: '100%',
-        maxWidth: '1200px',
         marginTop: '80px',
-        padding: '0 20px',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '24px'
       }}>
         {/* Tabs */}
         <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
@@ -124,7 +118,6 @@ const XRayProcessor: React.FC = () => {
             activeKey={selectedModel}
             items={models}
             onChange={setSelectedModel}
-            style={{ width: '100%', maxWidth: '600px' }}
             centered
           />
         </div>
@@ -143,14 +136,14 @@ const XRayProcessor: React.FC = () => {
         {/* Image Cards */}
         <div style={{ 
           width: '100%',
-          maxWidth: '1000px',
+          marginTop: '20px',
           display: 'flex',
           flexDirection: 'row',
           gap: '24px',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          padding: '20px'
         }}>
-          <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: 'calc(50% - 12px)' }}>
+          <div style={{ flex: '1 0' }}>
             <Card title="Original Image" style={{ width: '100%' }}>
               <div style={{ 
                 height: '400px',
@@ -175,7 +168,7 @@ const XRayProcessor: React.FC = () => {
             </Card>
           </div>
 
-          <div style={{ flex: '1 1 400px', minWidth: '300px', maxWidth: 'calc(50% - 12px)' }}>
+          <div style={{ flex: '1 0' }}>
             <Card title="Processed Image" style={{ width: '100%' }}>
               <div style={{ 
                 height: '400px',
@@ -214,7 +207,7 @@ const XRayProcessor: React.FC = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

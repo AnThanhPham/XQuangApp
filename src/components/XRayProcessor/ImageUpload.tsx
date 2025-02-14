@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { Button } from 'antd';
 import { Upload } from "lucide-react";
 
 interface ImageUploadProps {
@@ -10,7 +10,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload }) => {
   return (
     <div className="flex items-center justify-center">
       <label className="relative cursor-pointer">
-        <Button variant="outline" className="w-full">
+        <Button className="w-full">
           <Upload className="mr-2 h-4 w-4" />
           Upload X-Ray Image
         </Button>
