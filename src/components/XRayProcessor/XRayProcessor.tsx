@@ -1,22 +1,27 @@
-import React, { useState } from 'react';
-import { Card, Upload, Button, Tabs, Typography, message } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Select, Button, Tabs, Typography, message, Spin } from 'antd';
 import type { TabsProps } from 'antd';
 
-const { Title } = Typography;
-
 interface ProcessedImage {
-  original: string | null;
-  processed: string | null;
+  originalPath: string | null;
+  processedPath: string | null;
+}
+
+interface ImageFile {
+  name: string;
+  path: string;
 }
 
 const XRayProcessor: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>('1');
+  const [availableImages, setAvailableImages] = useState<ImageFile[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [images, setImages] = useState<ProcessedImage>({
-    original: null,
-    processed: null
+    originalPath: null,
+    processedPath: null
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
 
   const models: TabsProps['items'] = [
     { key: '1', label: 'Model 1' },
@@ -26,56 +31,82 @@ const XRayProcessor: React.FC = () => {
     { key: '5', label: 'Model 5' },
   ];
 
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImages({
-        original: reader.result as string,
-        processed: null
-      });
-    };
-    reader.readAsDataURL(file);
-    return false;
+  const API_ENDPOINT = 'http://localhost:8000';
+
+  // Fetch available images on component mount
+  useEffect(() => {
+    fetchAvailableImages();
+  }, []);
+
+  const fetchAvailableImages = async () => {
+    setIsLoadingImages(true);
+    try {
+      const response = await fetch(`${API_ENDPOINT}/list-images`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Map image names to objects with path and name
+      const imageFiles = data.images.map((filename: string) => ({
+        name: filename,
+        path: `/images/original/${filename}`
+      }));
+      
+      setAvailableImages(imageFiles);
+    } catch (error) {
+      console.error("Error fetching images:", error);
+      message.error('Failed to load available images!');
+    } finally {
+      setIsLoadingImages(false);
+    }
+  };
+
+  const handleImageSelect = (filename: string) => {
+    setSelectedImage(filename);
+    setImages({
+      originalPath: `/images/original/${filename}`,
+      processedPath: null
+    });
   };
 
   const processImage = async () => {
+    if (!selectedImage) {
+      message.error("Please select an image first.");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      if (!images.original) {
-        message.error("Please upload an image first.");
-        return;
-      }
-
-      const response = await fetch('your-api-endpoint', {
+      const response = await fetch(`${API_ENDPOINT}/process-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          image: images.original,
+          image: selectedImage,
           model: selectedModel
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || response.statusText);
+        throw new Error(errorData.detail || `HTTP error! Status: ${response.status}`);
       }
 
       const result = await response.json();
-      setImages(prev => ({
-        ...prev,
-        processed: result.processedImage
-      }));
-    } catch (error: unknown) {
-      console.error('Error processing image:', error);
-      if (error instanceof Error) {
-        message.error(`Image processing failed: ${error.message}`);
-      } else if (typeof error === 'string') {
-        message.error(`Image processing failed: ${error}`);
-      } else {
-        message.error("An unknown error occurred.");
-      }
+      
+      setImages({
+        originalPath: result.originalPath,
+        processedPath: result.processedPath
+      });
+
+      message.success('Image retrieved successfully!');
+    } catch (error) {
+      console.error("Error retrieving image:", error);
+      message.error(error instanceof Error ? error.message : 'Failed to retrieve processed image!');
     } finally {
       setIsLoading(false);
     }
@@ -83,129 +114,102 @@ const XRayProcessor: React.FC = () => {
 
   return (
     <>
-      {/* Header */}
-      <div style={{
-        background: '#fff',
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        top: 0,
-        zIndex: 99,
-        padding: '16px 0',
-        borderBottom: '1px solid #f0f0f0'
-        // width: '100%',
-        // borderBottom: '1px solid #f0f0f0',
-        // background: '#fff',
-        // padding: '16px 0',
-        // // position: 'fixed',
-        // top: 0,
-        // zIndex: 1000,
-        // display: 'flex',
-        // justifyContent: 'center'
+      {/* Tabs */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <Tabs
+          activeKey={selectedModel}
+          items={models}
+          onChange={setSelectedModel}
+          centered
+        />
+      </div>
+
+      {/* Image Selection */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
+        <Select
+          style={{ width: 300 }}
+          placeholder={isLoadingImages ? "Loading images..." : "Select an X-Ray Image"}
+          loading={isLoadingImages}
+          onChange={handleImageSelect}
+          value={selectedImage}
+          options={availableImages.map(img => ({ value: img.name, label: img.name }))}
+        />
+      </div>
+
+      {/* Image Cards */}
+      <div style={{ 
+        width: '100%',
+        marginTop: '20px',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '24px',
+        justifyContent: 'center',
+        padding: '20px'
       }}>
-        <div style={{ width: '100%', textAlign: 'center' }}>
-          <Title level={3} style={{ margin: 0 }}>X-Ray Image Processor</Title>
+        <div style={{ flex: '1 0' }}>
+          <Card title="Original Image" style={{ width: '100%' }}>
+            <div style={{ 
+              height: '400px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              {images.originalPath ? (
+                <img
+                  src={images.originalPath}
+                  alt="Original"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain'
+                  }}
+                />
+              ) : (
+                <Typography.Text type="secondary">No image selected</Typography.Text>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        <div style={{ flex: '1 0' }}>
+          <Card title="Processed Image" style={{ width: '100%' }}>
+            <div style={{ 
+              height: '400px',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
+              {isLoading ? (
+                <Spin tip="Processing..." />
+              ) : images.processedPath ? (
+                <img
+                  src={images.processedPath}
+                  alt="Processed"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain'
+                  }}
+                />
+              ) : (
+                <Typography.Text type="secondary">No processed image yet</Typography.Text>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
 
-      {/* Main Content Container */}
-      <div style={{
-        marginTop: '80px',
-      }}>
-        {/* Tabs */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-          <Tabs
-            activeKey={selectedModel}
-            items={models}
-            onChange={setSelectedModel}
-            centered
-          />
-        </div>
-
-        {/* Upload Button */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <Upload
-            beforeUpload={handleImageUpload}
-            accept="image/*"
-            showUploadList={false}
-          >
-            <Button icon={<UploadOutlined />} size="large">Upload X-Ray Image</Button>
-          </Upload>
-        </div>
-
-        {/* Image Cards */}
-        <div style={{ 
-          width: '100%',
-          marginTop: '20px',
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '24px',
-          justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div style={{ flex: '1 0' }}>
-            <Card title="Original Image" style={{ width: '100%' }}>
-              <div style={{ 
-                height: '400px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-                {images.original ? (
-                  <img
-                    src={images.original}
-                    alt="Original"
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
-                ) : (
-                  <Typography.Text type="secondary">No image uploaded</Typography.Text>
-                )}
-              </div>
-            </Card>
-          </div>
-
-          <div style={{ flex: '1 0' }}>
-            <Card title="Processed Image" style={{ width: '100%' }}>
-              <div style={{ 
-                height: '400px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
-              }}>
-                {images.processed ? (
-                  <img
-                    src={images.processed}
-                    alt="Processed"
-                    style={{
-                      maxWidth: '100%',
-                      maxHeight: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
-                ) : (
-                  <Typography.Text type="secondary">No processed image yet</Typography.Text>
-                )}
-              </div>
-            </Card>
-          </div>
-        </div>
-
-        {/* Process Button */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
-          <Button
-            type="primary"
-            size="large"
-            onClick={processImage}
-            disabled={!images.original || isLoading}
-            loading={isLoading}
-          >
-            Process Image
-          </Button>
-        </div>
+      {/* Process Button */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+        <Button
+          type="primary"
+          size="large"
+          onClick={processImage}
+          disabled={!selectedImage || isLoading}
+          loading={isLoading}
+        >
+          Show Processed Image
+        </Button>
       </div>
     </>
   );
