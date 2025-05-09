@@ -24,11 +24,11 @@ const XRayProcessor: React.FC = () => {
   const [isLoadingImages, setIsLoadingImages] = useState<boolean>(true);
 
   const models: TabsProps['items'] = [
-    { key: '1', label: 'Model 1' },
-    { key: '2', label: 'Model 2' },
-    { key: '3', label: 'Model 3' },
-    { key: '4', label: 'Model 4' },
-    { key: '5', label: 'Model 5' },
+    { key: 'cnn', label: 'CNN' },
+    { key: 'rug', label: 'Res-UNet-GAN' },
+    { key: 'aub', label: 'Att-UNet-Base' },
+    { key: 'aus', label: 'Att-UNet-Small' },
+    { key: 'aut', label: 'Att-UNet-Tiny' },
   ];
 
   const API_ENDPOINT = 'http://localhost:8000';
@@ -188,6 +188,8 @@ const XRayProcessor: React.FC = () => {
                   style={{
                     maxWidth: '100%',
                     maxHeight: '100%',
+                    width: '100%',
+                    height: '100%',
                     objectFit: 'contain'
                   }}
                 />
